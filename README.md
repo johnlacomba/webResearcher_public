@@ -1,6 +1,6 @@
-usage: research_tool [-h] {research,wiki,repo,query,status,migrate-embeddings,re-ingest,benchmark,eval} ...
-
 Autonomous iterative web research tool with RAG-augmented querying.
+
+usage: research_tool [-h] {research,wiki,repo,query,status,migrate-embeddings,re-ingest,benchmark,eval} ...
 
 positional arguments:
   
