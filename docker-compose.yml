@@ -1,0 +1,18 @@
+services:
+  researcher:
+    build: .
+    volumes:
+      - research-data:/data
+      - model-cache:/root/.web_researcher/models
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OMLX_API_KEY=${OMLX_API_KEY}
+      - OMLX_BASE_URL=${OMLX_BASE_URL:-http://host.docker.internal:8000/v1}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434/v1}
+    working_dir: /data
+    stdin_open: true
+    tty: true
+
+volumes:
+  research-data:
+  model-cache:
