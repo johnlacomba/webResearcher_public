@@ -1,10 +1,11 @@
-% python3 -m research_tool --help
+> python3 -m research_tool --help
+
 usage: research_tool [-h] {research,wiki,repo,query,status,migrate-embeddings,re-ingest,benchmark,eval} ...
 
 Autonomous iterative web research tool with RAG-augmented querying.
 
 positional arguments:
-  {research,wiki,repo,query,status,migrate-embeddings,re-ingest,benchmark,eval}
+  
     research            Run an autonomous research loop
     wiki                Exhaustively crawl and ingest a wiki/docs site
     repo                Clone and index a Git repo or all repos in a Bitbucket workspace
