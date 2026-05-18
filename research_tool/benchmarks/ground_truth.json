@@ -1,0 +1,1002 @@
+{
+  "documents": [
+    {"path": "corpus/web_article.txt", "url": "bench://dht-article", "type": "text"},
+    {"path": "corpus/web_article_mixed.txt", "url": "bench://async-pipelines", "type": "text"},
+    {"path": "corpus/wiki_page.html", "url": "bench://crypto-hash-wiki", "type": "wiki"},
+    {"path": "corpus/sample_python.py", "url": "bench://task-scheduler", "type": "code", "language": "python"},
+    {"path": "corpus/sample_go.go", "url": "bench://rate-limiter", "type": "code", "language": "go"},
+    {"path": "corpus/multi_section_doc.txt", "url": "bench://db-indexing", "type": "text"},
+    {"path": "corpus/sample_csharp.cs", "url": "bench://notification-service", "type": "code", "language": "c_sharp"},
+    {"path": "corpus/sample_csharp_pool.cs", "url": "bench://connection-pool", "type": "code", "language": "c_sharp"}
+  ],
+  "queries": [
+    {
+      "query": "What are the four foundational DHT protocols?",
+      "expected_passages": ["Chord, Pastry, Tapestry, and CAN"],
+      "source_doc": "web_article.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "How many entries does a Chord finger table maintain?",
+      "expected_passages": ["O(log N) entries, enabling lookups in O(log N) hops"],
+      "source_doc": "web_article.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What is the average latency reduction of Pastry compared to purely logical routing?",
+      "expected_passages": ["reducing end-to-end latency by an average of 35-40% compared to purely logical routing"],
+      "source_doc": "web_article.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What routing complexity does CAN achieve?",
+      "expected_passages": ["O(d * N^(1/d)) routing complexity"],
+      "source_doc": "web_article.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What is special about the XOR distance metric in Kademlia?",
+      "expected_passages": ["XOR distance is symmetric: the distance from node A to node B equals the distance from B to A"],
+      "source_doc": "web_article.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What are the four remote procedure calls in Kademlia?",
+      "expected_passages": ["PING, STORE, FIND_NODE, and FIND_VALUE"],
+      "source_doc": "web_article.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "How many concurrent nodes does BitTorrent's mainline DHT operate with?",
+      "expected_passages": ["over 25 million concurrent nodes as of 2024"],
+      "source_doc": "web_article.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What is the median lookup time for Kademlia in a 10,000 node network?",
+      "expected_passages": ["median lookup times of 200-400 milliseconds in networks of 10,000 nodes"],
+      "source_doc": "web_article.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "How does S/Kademlia mitigate Sybil attacks?",
+      "expected_passages": ["requiring nodes to generate their IDs through a crypto-puzzle that takes approximately 30 seconds of computation"],
+      "source_doc": "web_article.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What is the theoretical lower bound for DHT routing messages?",
+      "expected_passages": ["Omega(log N / log log N) messages, established by Xu, Kumar, and Yu in 2003"],
+      "source_doc": "web_article.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "hard"
+    },
+    {
+      "query": "How does Koorde achieve its routing complexity?",
+      "expected_passages": ["embedding a de Bruijn graph on top of a Chord ring"],
+      "source_doc": "web_article.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "hard"
+    },
+    {
+      "query": "What node turnover rates do real-world peer-to-peer networks experience?",
+      "expected_passages": ["node turnover rates of 25-50% per hour"],
+      "source_doc": "web_article.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What is the maximum number of entries per k-bucket in Kademlia?",
+      "expected_passages": ["each bucket holds up to k contacts (typically k=20)"],
+      "source_doc": "web_article.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What does IPFS use for its DHT implementation?",
+      "expected_passages": ["modified Kademlia variant called Coral DSHT, which adds hierarchical clustering"],
+      "source_doc": "web_article.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What is the constraint for mitigating Eclipse attacks in DHTs?",
+      "expected_passages": ["no single /24 subnet should contribute more than 2 entries per k-bucket"],
+      "source_doc": "web_article.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "hard"
+    },
+    {
+      "query": "What is the default concurrency limit in the bounded_gather function?",
+      "expected_passages": ["max_concurrent: int = 50"],
+      "source_doc": "web_article_mixed.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What happens when asyncio.gather encounters an exception with default settings?",
+      "expected_passages": ["the first exception cancels all pending tasks"],
+      "source_doc": "web_article_mixed.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What are the exponential backoff delays for 3 retries?",
+      "expected_passages": ["the delays are 1, 2, and 4 seconds"],
+      "source_doc": "web_article_mixed.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What is the maximum worst-case wait time per item in the pipeline?",
+      "expected_passages": ["30 * 3 + 7 = 97 seconds per item worst case"],
+      "source_doc": "web_article_mixed.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "hard"
+    },
+    {
+      "query": "What is the default HTTP connection pool size in aiohttp?",
+      "expected_passages": ["default pool size of 100 connections per host"],
+      "source_doc": "web_article_mixed.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What does setting limit_per_host to 10 do?",
+      "expected_passages": ["no single downstream service receives more than 10 concurrent connections"],
+      "source_doc": "web_article_mixed.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "How does the producer-consumer pipeline signal shutdown?",
+      "expected_passages": ["the producer sends one None sentinel per consumer after exhausting the source"],
+      "source_doc": "web_article_mixed.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What is the throughput of async pipelines compared to thread-based approaches?",
+      "expected_passages": ["5,000-15,000 HTTP requests per second", "thread-pool-based approach with 200 threads typically plateaus around 1,000-2,000 requests per second"],
+      "source_doc": "web_article_mixed.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "How much memory does each coroutine frame use compared to a thread stack?",
+      "expected_passages": ["each coroutine frame is approximately 2KB versus 8MB default stack per thread"],
+      "source_doc": "web_article_mixed.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What does the PipelineConfig dataclass contain?",
+      "expected_passages": ["max_concurrent: int = 50", "batch_size: int = 100", "retry_limit: int = 3", "timeout_seconds: float = 30.0"],
+      "source_doc": "web_article_mixed.txt",
+      "expected_content_types": ["code"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What is the ttl_dns_cache value used in the HTTP session?",
+      "expected_passages": ["ttl_dns_cache=300"],
+      "source_doc": "web_article_mixed.txt",
+      "expected_content_types": ["code"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What does the PipelineMetrics throughput property calculate?",
+      "expected_passages": ["self.processed / max(self.elapsed, 0.001)"],
+      "source_doc": "web_article_mixed.txt",
+      "expected_content_types": ["code"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "Why should cryptographic hash functions not be used for password hashing?",
+      "expected_passages": ["their speed enables brute-force attacks", "A modern GPU can compute approximately 8 billion SHA-256 hashes per second"],
+      "source_doc": "wiki_page.html",
+      "expected_content_types": ["text"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What are the three fundamental security properties of cryptographic hash functions?",
+      "expected_passages": ["Preimage resistance", "Second preimage resistance", "Collision resistance"],
+      "source_doc": "wiki_page.html",
+      "expected_content_types": ["text"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "How many rounds does SHA-256 use?",
+      "expected_passages": ["64 rounds of compression"],
+      "source_doc": "wiki_page.html",
+      "expected_content_types": ["text"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What throughput does SHA-256 achieve with hardware extensions?",
+      "expected_passages": ["approximately 2.5 GB/s on a single core"],
+      "source_doc": "wiki_page.html",
+      "expected_content_types": ["text"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What is the SHA-256 message schedule expansion formula?",
+      "expected_passages": ["W_t = sigma1(W_{t-2}) + W_{t-7} + sigma0(W_{t-15}) + W_{t-16}"],
+      "source_doc": "wiki_page.html",
+      "expected_content_types": ["text"],
+      "difficulty": "hard"
+    },
+    {
+      "query": "What is the block size for SHA-384 and SHA-512?",
+      "expected_passages": ["1024"],
+      "source_doc": "wiki_page.html",
+      "expected_content_types": ["text"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "Who designed the Keccak sponge construction?",
+      "expected_passages": ["Guido Bertoni, Joan Daemen, Michaël Peeters, and Gilles Van Assche"],
+      "source_doc": "wiki_page.html",
+      "expected_content_types": ["text"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What are the five step mappings in Keccak-f?",
+      "expected_passages": ["theta, rho, pi, chi, and iota"],
+      "source_doc": "wiki_page.html",
+      "expected_content_types": ["text"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What is the rate and capacity for SHA3-256?",
+      "expected_passages": ["r = 1088 bits and c = 512 bits"],
+      "source_doc": "wiki_page.html",
+      "expected_content_types": ["text"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What post-quantum cryptographic schemes use SHAKE?",
+      "expected_passages": ["CRYSTALS-Kyber and CRYSTALS-Dilithium"],
+      "source_doc": "wiki_page.html",
+      "expected_content_types": ["text"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "How fast is BLAKE2b compared to SHA-256?",
+      "expected_passages": ["approximately 3.5 GB/s on modern hardware", "roughly 3x faster than SHA-256 without hardware acceleration"],
+      "source_doc": "wiki_page.html",
+      "expected_content_types": ["text"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What throughput does BLAKE3 achieve on a 16-core processor?",
+      "expected_passages": ["exceeding 30 GB/s by hashing independent subtrees in parallel"],
+      "source_doc": "wiki_page.html",
+      "expected_content_types": ["text"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "When did Git begin transitioning from SHA-1 to SHA-256?",
+      "expected_passages": ["Following the SHAttered collision attack in 2017"],
+      "source_doc": "wiki_page.html",
+      "expected_content_types": ["text"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What are the recommended Argon2id parameters?",
+      "expected_passages": ["19 MiB memory, 2 iterations, 1 degree of parallelism"],
+      "source_doc": "wiki_page.html",
+      "expected_content_types": ["text"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What is Bitcoin's current network hashrate?",
+      "expected_passages": ["exceeds 600 exahashes per second"],
+      "source_doc": "wiki_page.html",
+      "expected_content_types": ["text"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "When did Ethereum transition to proof-of-stake?",
+      "expected_passages": ["September 2022 (the Merge)"],
+      "source_doc": "wiki_page.html",
+      "expected_content_types": ["text"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "How many qubits would be needed to break SHA-256 preimage resistance?",
+      "expected_passages": ["approximately 2,330 logical qubits and over 10^23 T-gates"],
+      "source_doc": "wiki_page.html",
+      "expected_content_types": ["text"],
+      "difficulty": "hard"
+    },
+    {
+      "query": "What algorithm provides quadratic speedup for searching unstructured databases?",
+      "expected_passages": ["Grover's algorithm provides a quadratic speedup"],
+      "source_doc": "wiki_page.html",
+      "expected_content_types": ["text"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "How many rounds does BLAKE3 use compared to BLAKE2b?",
+      "expected_passages": ["7 rounds (compared to BLAKE2b's 12 rounds)"],
+      "source_doc": "wiki_page.html",
+      "expected_content_types": ["text"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What is the SHA-256 digest of 'The quick brown fox jumps over the lazy dog'?",
+      "expected_passages": ["d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592"],
+      "source_doc": "wiki_page.html",
+      "expected_content_types": ["code"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What collision resistance reduction does the BHT algorithm achieve?",
+      "expected_passages": ["reducing collision resistance from 2^(n/2) to 2^(n/3)"],
+      "source_doc": "wiki_page.html",
+      "expected_content_types": ["text"],
+      "difficulty": "hard"
+    },
+    {
+      "query": "What task statuses are defined in the Python scheduler?",
+      "expected_passages": ["PENDING", "RUNNING", "COMPLETED", "FAILED", "CANCELLED", "TIMED_OUT"],
+      "source_doc": "sample_python.py",
+      "expected_content_types": ["code"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What priority levels does the task scheduler support?",
+      "expected_passages": ["CRITICAL = 0", "HIGH = 1", "NORMAL = 2", "LOW = 3", "BACKGROUND = 4"],
+      "source_doc": "sample_python.py",
+      "expected_content_types": ["code"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "How does generate_task_id create deterministic IDs?",
+      "expected_passages": ["SHA-256 of the canonical parameter representation"],
+      "source_doc": "sample_python.py",
+      "expected_content_types": ["code"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What is the default TTL for the ResultCache?",
+      "expected_passages": ["ttl_seconds: float = 3600.0"],
+      "source_doc": "sample_python.py",
+      "expected_content_types": ["code"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "How does the ResultCache evict entries when full?",
+      "expected_passages": ["oldest_key = min(self._cache, key=lambda k: self._cache[k][0])"],
+      "source_doc": "sample_python.py",
+      "expected_content_types": ["code"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What data structures does the DependencyGraph maintain?",
+      "expected_passages": ["adjacency lists for both forward dependencies", "reverse dependencies"],
+      "source_doc": "sample_python.py",
+      "expected_content_types": ["code"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "How does the DependencyGraph detect cycles?",
+      "expected_passages": ["visited", "rec_stack", "def dfs(node"],
+      "source_doc": "sample_python.py",
+      "expected_content_types": ["code"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What is the default max_concurrent value for the TaskScheduler?",
+      "expected_passages": ["max_concurrent: int = 4"],
+      "source_doc": "sample_python.py",
+      "expected_content_types": ["code"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What happens when a task times out in the scheduler?",
+      "expected_passages": ["TIMED_OUT", "retry_count"],
+      "source_doc": "sample_python.py",
+      "expected_content_types": ["code"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What is the default timeout for scheduled tasks?",
+      "expected_passages": ["timeout_seconds: float = 300.0"],
+      "source_doc": "sample_python.py",
+      "expected_content_types": ["code"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "How does the TaskScheduler use the heap queue?",
+      "expected_passages": ["heapq.heappush", "heapq.heappop"],
+      "source_doc": "sample_python.py",
+      "expected_content_types": ["code"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What fields does the ScheduledTask dataclass have?",
+      "expected_passages": ["priority", "created_at", "task_id", "name: str", "callback", "dependencies", "timeout_seconds", "retry_count", "max_retries", "metadata"],
+      "source_doc": "sample_python.py",
+      "expected_content_types": ["code"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What is the default max_size for the ResultCache?",
+      "expected_passages": ["max_size: int = 1000"],
+      "source_doc": "sample_python.py",
+      "expected_content_types": ["code"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What algorithm does the sliding window rate limiter use?",
+      "expected_passages": ["sliding window log algorithm"],
+      "source_doc": "sample_go.go",
+      "expected_content_types": ["code"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "How does the Go rate limiter check if a client has exceeded the limit?",
+      "expected_passages": ["currentCount >= effectiveLimit"],
+      "source_doc": "sample_go.go",
+      "expected_content_types": ["code"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What are the validation constraints for the rate limiter Config?",
+      "expected_passages": ["MaxRequests must be positive", "Window must be at least 1s", "Window must be at most 24h", "BurstSize must be non-negative"],
+      "source_doc": "sample_go.go",
+      "expected_content_types": ["code"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "How does ClientKey generate deterministic rate limit keys?",
+      "expected_passages": ["deterministic key for rate limiting by hashing"],
+      "source_doc": "sample_go.go",
+      "expected_content_types": ["code"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What is the memory complexity per active client for the sliding window limiter?",
+      "expected_passages": ["uses O(MaxRequests)"],
+      "source_doc": "sample_go.go",
+      "expected_content_types": ["code"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "How does the burst decay mechanism work in the rate limiter?",
+      "expected_passages": ["decayed := int(math.Floor(float64(log.burstUsed)"],
+      "source_doc": "sample_go.go",
+      "expected_content_types": ["code"],
+      "difficulty": "hard"
+    },
+    {
+      "query": "What does the Cleanup function return?",
+      "expected_passages": ["the number of clients cleaned up"],
+      "source_doc": "sample_go.go",
+      "expected_content_types": ["code"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What is the boundary burst problem in fixed-window rate limiting?",
+      "expected_passages": ["can allow up to 2x the rate limit at window boundaries"],
+      "source_doc": "sample_go.go",
+      "expected_content_types": ["code"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "How is the window key computed for the FixedWindowCounter?",
+      "expected_passages": ["Unix timestamp divided by window"],
+      "source_doc": "sample_go.go",
+      "expected_content_types": ["code"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What is the default KeyPrefix for the rate limiter?",
+      "expected_passages": ["KeyPrefix = \"rl:\""],
+      "source_doc": "sample_go.go",
+      "expected_content_types": ["code"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What fields does the Result struct contain in the Go rate limiter?",
+      "expected_passages": ["Allowed", "Remaining", "ResetAt", "RetryAfter"],
+      "source_doc": "sample_go.go",
+      "expected_content_types": ["code"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What is the branching factor of a B-tree with 8KB pages and 8-byte keys?",
+      "expected_passages": ["approximately 500 entries"],
+      "source_doc": "multi_section_doc.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "How many rows can a three-level B-tree index?",
+      "expected_passages": ["125 million rows"],
+      "source_doc": "multi_section_doc.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What is the leftmost prefix rule for composite indexes?",
+      "expected_passages": ["queries that filter on any left prefix of the indexed columns"],
+      "source_doc": "multi_section_doc.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What is the Equality-Sort-Range (ESR) rule?",
+      "expected_passages": ["columns used in equality comparisons first, then columns used for sorting, then columns used in range comparisons"],
+      "source_doc": "multi_section_doc.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What latency reduction can covering indexes provide?",
+      "expected_passages": ["reduce query latency by 10-100x"],
+      "source_doc": "multi_section_doc.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "How do you create a covering index in PostgreSQL?",
+      "expected_passages": ["INCLUDE clause"],
+      "source_doc": "multi_section_doc.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "When did hash indexes become crash-safe in PostgreSQL?",
+      "expected_passages": ["PostgreSQL 10"],
+      "source_doc": "multi_section_doc.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What spatial queries do GiST indexes support with PostGIS?",
+      "expected_passages": ["bounding-box intersection and nearest-neighbor searches"],
+      "source_doc": "multi_section_doc.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "How do GIN indexes compare to GiST for full-text search?",
+      "expected_passages": ["GIN indexes are typically 2-3x faster than GiST indexes for lookups but 3x slower to build and 2-3x larger on disk"],
+      "source_doc": "multi_section_doc.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "How much space does a BRIN index occupy on a 100GB table?",
+      "expected_passages": ["only a few hundred kilobytes"],
+      "source_doc": "multi_section_doc.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What is the default block range size for BRIN indexes?",
+      "expected_passages": ["128 pages"],
+      "source_doc": "multi_section_doc.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "How much can a partial index reduce index size when 95% of rows are completed?",
+      "expected_passages": ["reduces index size by 95%"],
+      "source_doc": "multi_section_doc.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What is the HOT optimization in PostgreSQL?",
+      "expected_passages": ["modify the tuple in-place within the same page without updating any index entries"],
+      "source_doc": "multi_section_doc.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "How much throughput reduction can adding an index on a frequently-updated column cause?",
+      "expected_passages": ["reduce throughput by 40-60%"],
+      "source_doc": "multi_section_doc.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What fillfactor indicates a bloated B-tree index?",
+      "expected_passages": ["fillfactor below 50%"],
+      "source_doc": "multi_section_doc.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What does the pg_repack extension provide?",
+      "expected_passages": ["online reindexing without exclusive locks"],
+      "source_doc": "multi_section_doc.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "When does the query planner typically reject an index in favor of a sequential scan?",
+      "expected_passages": ["when the query matches more than 10-20% of the table"],
+      "source_doc": "multi_section_doc.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What problem does PostgreSQL's default statistics assumption cause?",
+      "expected_passages": ["assume column independence", "product of individual selectivities"],
+      "source_doc": "multi_section_doc.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "hard"
+    },
+    {
+      "query": "What do PostgreSQL extended statistics track?",
+      "expected_passages": ["multi-column correlations, n-distinct counts for column combinations, and MCV (most common values) lists"],
+      "source_doc": "multi_section_doc.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What write amplification does a table with 10 indexes experience?",
+      "expected_passages": ["11 writes (1 heap + 10 indexes)"],
+      "source_doc": "multi_section_doc.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "Which DHT protocol is used by Ethereum for peer discovery?",
+      "expected_passages": ["Kademlia-like structure for peer discovery"],
+      "source_doc": "web_article.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What CAN routing path length is achieved with 10 dimensions and 100,000 nodes?",
+      "expected_passages": ["average path length of approximately 4.5 hops"],
+      "source_doc": "web_article.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "hard"
+    },
+    {
+      "query": "How does asyncio differ from threads in scheduling?",
+      "expected_passages": ["async tasks voluntarily yield control at await points"],
+      "source_doc": "web_article_mixed.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What causes starvation in async Python programs?",
+      "expected_passages": ["A single task that performs CPU-heavy work without yielding can block the entire event loop"],
+      "source_doc": "web_article_mixed.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What is the size of the Keccak state array?",
+      "expected_passages": ["5×5×64 state array (1600 bits total)"],
+      "source_doc": "wiki_page.html",
+      "expected_content_types": ["text"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What are SHAKE128 and SHAKE256?",
+      "expected_passages": ["extendable-output functions (XOFs) derived from Keccak"],
+      "source_doc": "wiki_page.html",
+      "expected_content_types": ["text"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What is the energy consumption of Bitcoin mining?",
+      "expected_passages": ["approximately 150 terawatt-hours per year"],
+      "source_doc": "wiki_page.html",
+      "expected_content_types": ["text"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "How does the topological sort detect cycles in the DependencyGraph?",
+      "expected_passages": ["if len(result) != len(self._forward)", "Dependency cycle detected"],
+      "source_doc": "sample_python.py",
+      "expected_content_types": ["code"],
+      "difficulty": "hard"
+    },
+    {
+      "query": "How does the TaskScheduler check if a task's dependencies are satisfied?",
+      "expected_passages": ["self._graph.is_ready(task.task_id, self._completed)"],
+      "source_doc": "sample_python.py",
+      "expected_content_types": ["code"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What happens when the Go rate limiter context is cancelled?",
+      "expected_passages": ["ctx.Err()"],
+      "source_doc": "sample_go.go",
+      "expected_content_types": ["code"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What is the storage complexity difference between sliding window and fixed window rate limiting?",
+      "expected_passages": ["O(N) storage per client", "O(1) storage"],
+      "source_doc": "sample_go.go",
+      "expected_content_types": ["code"],
+      "difficulty": "hard"
+    },
+    {
+      "query": "How many page reads does a B-tree lookup require for 10 million rows?",
+      "expected_passages": ["only 3-4 page reads"],
+      "source_doc": "multi_section_doc.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What table churn threshold triggers index bloat monitoring?",
+      "expected_passages": ["updates + deletes per day) exceeds 10% of the table size"],
+      "source_doc": "multi_section_doc.txt",
+      "expected_content_types": ["text"],
+      "difficulty": "hard"
+    },
+    {
+      "query": "What delivery modes does the C# notification service support?",
+      "expected_passages": ["FireAndForget", "AtLeastOnce", "ExactlyOnce"],
+      "source_doc": "sample_csharp.cs",
+      "expected_content_types": ["code"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What is the default event priority for a NotificationEvent?",
+      "expected_passages": ["EventPriority.Normal"],
+      "source_doc": "sample_csharp.cs",
+      "expected_content_types": ["code"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What is the default MaxRetries value in the RetryPolicy?",
+      "expected_passages": ["MaxRetries { get; init; } = 3"],
+      "source_doc": "sample_csharp.cs",
+      "expected_content_types": ["code"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What is the default base delay for retries in the C# notification service?",
+      "expected_passages": ["TimeSpan.FromMilliseconds(100)"],
+      "source_doc": "sample_csharp.cs",
+      "expected_content_types": ["code"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What is the maximum delay cap for retry backoff?",
+      "expected_passages": ["TimeSpan.FromSeconds(30)"],
+      "source_doc": "sample_csharp.cs",
+      "expected_content_types": ["code"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "How does the RetryPolicy compute the delay for a retry attempt?",
+      "expected_passages": ["BaseDelay.TotalMilliseconds * Math.Pow(2, attempt)"],
+      "source_doc": "sample_csharp.cs",
+      "expected_content_types": ["code"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "How does the notification service generate deterministic event IDs?",
+      "expected_passages": ["SHA256.HashData(Encoding.UTF8.GetBytes(input))"],
+      "source_doc": "sample_csharp.cs",
+      "expected_content_types": ["code"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What format string is used to generate the event ID input?",
+      "expected_passages": ["{source}:{eventType}:{timestamp:O}"],
+      "source_doc": "sample_csharp.cs",
+      "expected_content_types": ["code"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "How are subscription IDs generated in the C# notification service?",
+      "expected_passages": ["Guid.NewGuid().ToString(\"N\")[..12]"],
+      "source_doc": "sample_csharp.cs",
+      "expected_content_types": ["code"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What is the default maximum concurrent dispatches for the EventBus?",
+      "expected_passages": ["maxConcurrentDispatches = 16"],
+      "source_doc": "sample_csharp.cs",
+      "expected_content_types": ["code"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "How does the EventBus throttle concurrent handler invocations?",
+      "expected_passages": ["SemaphoreSlim to throttle"],
+      "source_doc": "sample_csharp.cs",
+      "expected_content_types": ["code"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "How often does the EventBus dispatch loop drain the priority queue?",
+      "expected_passages": ["50 milliseconds"],
+      "source_doc": "sample_csharp.cs",
+      "expected_content_types": ["code"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What ordering does the EventBus use for events at the same priority level?",
+      "expected_passages": ["FIFO order"],
+      "source_doc": "sample_csharp.cs",
+      "expected_content_types": ["code"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "How does the EventBus handle thread safety for subscriptions?",
+      "expected_passages": ["lock-free concurrent collections"],
+      "source_doc": "sample_csharp.cs",
+      "expected_content_types": ["code"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What concurrency concern does the maxConcurrentDispatches parameter prevent?",
+      "expected_passages": ["thread pool starvation"],
+      "source_doc": "sample_csharp.cs",
+      "expected_content_types": ["code"],
+      "difficulty": "hard"
+    },
+    {
+      "query": "How does the ExactlyOnce delivery mode prevent duplicate processing?",
+      "expected_passages": ["HasBeenProcessedAsync(evt.EventId, sub.Id, ct)"],
+      "source_doc": "sample_csharp.cs",
+      "expected_content_types": ["code"],
+      "difficulty": "hard"
+    },
+    {
+      "query": "What happens to events remaining in the queue after EventBus shutdown?",
+      "expected_passages": ["events remaining in the queue after shutdown are lost unless"],
+      "source_doc": "sample_csharp.cs",
+      "expected_content_types": ["code"],
+      "difficulty": "hard"
+    },
+    {
+      "query": "How long does DisposeAsync wait for in-flight deliveries?",
+      "expected_passages": ["TimeSpan.FromSeconds(5)"],
+      "source_doc": "sample_csharp.cs",
+      "expected_content_types": ["code"],
+      "difficulty": "easy"
+    },
+
+    {
+      "query": "What connection lifecycle states does the C# connection pool define?",
+      "expected_passages": ["Created", "Idle", "Active", "Evicted", "Faulted"],
+      "source_doc": "sample_csharp_pool.cs",
+      "expected_content_types": ["code"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What is the default MaxSize for the connection pool?",
+      "expected_passages": ["MaxSize { get; init; } = 20"],
+      "source_doc": "sample_csharp_pool.cs",
+      "expected_content_types": ["code"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What is the default MinSize for the connection pool?",
+      "expected_passages": ["MinSize { get; init; } = 2"],
+      "source_doc": "sample_csharp_pool.cs",
+      "expected_content_types": ["code"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What is the default health check interval for the connection pool?",
+      "expected_passages": ["HealthCheckInterval { get; init; } = TimeSpan.FromSeconds(30)"],
+      "source_doc": "sample_csharp_pool.cs",
+      "expected_content_types": ["code"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What pool sizing strategies does the connection pool support?",
+      "expected_passages": ["Elastic", "Fixed", "Lazy"],
+      "source_doc": "sample_csharp_pool.cs",
+      "expected_content_types": ["code"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What is the default MaxIdleTime for pooled connections?",
+      "expected_passages": ["TimeSpan.FromMinutes(5)"],
+      "source_doc": "sample_csharp_pool.cs",
+      "expected_content_types": ["code"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "What is the default maximum connection lifetime in the pool?",
+      "expected_passages": ["MaxLifetimeSeconds { get; init; } = 3600"],
+      "source_doc": "sample_csharp_pool.cs",
+      "expected_content_types": ["code"],
+      "difficulty": "easy"
+    },
+    {
+      "query": "How does the connection pool track timing with monotonic clocks?",
+      "expected_passages": ["Stopwatch.GetTimestamp()", "immune to system clock adjustments"],
+      "source_doc": "sample_csharp_pool.cs",
+      "expected_content_types": ["code"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What is the three-phase acquisition strategy in the connection pool?",
+      "expected_passages": ["Try to dequeue from the idle channel", "below MaxSize, create a new one", "wait on the idle channel up to AcquireTimeout"],
+      "source_doc": "sample_csharp_pool.cs",
+      "expected_content_types": ["code"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "How does the connection pool health check loop validate idle connections?",
+      "expected_passages": ["writes back only healthy connections"],
+      "source_doc": "sample_csharp_pool.cs",
+      "expected_content_types": ["code"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What happens when a PooledConnectionLease is garbage collected without disposal?",
+      "expected_passages": ["evicted rather than returned"],
+      "source_doc": "sample_csharp_pool.cs",
+      "expected_content_types": ["code"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "How does the Elastic sizing strategy manage idle connections during health checks?",
+      "expected_passages": ["idle longer than MaxIdleTime, but only if the pool is above MinSize"],
+      "source_doc": "sample_csharp_pool.cs",
+      "expected_content_types": ["code"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What data structure does the connection pool use for its idle queue?",
+      "expected_passages": ["unbounded Channel"],
+      "source_doc": "sample_csharp_pool.cs",
+      "expected_content_types": ["code"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "How does the PooledConnectionLease prevent use after disposal?",
+      "expected_passages": ["throw new ObjectDisposedException"],
+      "source_doc": "sample_csharp_pool.cs",
+      "expected_content_types": ["code"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What validation constraints does the PoolConfiguration enforce?",
+      "expected_passages": ["MinSize >= 0 and MinSize <= MaxSize", "MaxSize >= 1 and MaxSize <= 1000", "MaxIdleTime >= 10 seconds"],
+      "source_doc": "sample_csharp_pool.cs",
+      "expected_content_types": ["code"],
+      "difficulty": "medium"
+    },
+    {
+      "query": "What indicates a high churn rate in the connection pool and what does it suggest?",
+      "expected_passages": ["churn rate (> 0.3)", "MaxIdleTime is too aggressive"],
+      "source_doc": "sample_csharp_pool.cs",
+      "expected_content_types": ["code"],
+      "difficulty": "hard"
+    },
+    {
+      "query": "What is the drain timeout during connection pool shutdown and how is it calculated?",
+      "expected_passages": ["HealthCheckInterval * 3", "3x the health check interval"],
+      "source_doc": "sample_csharp_pool.cs",
+      "expected_content_types": ["code"],
+      "difficulty": "hard"
+    },
+    {
+      "query": "How does the connection pool statistics snapshot handle concurrent reads?",
+      "expected_passages": ["snapshot is not transactional", "fields may reflect slightly different points in time"],
+      "source_doc": "sample_csharp_pool.cs",
+      "expected_content_types": ["code"],
+      "difficulty": "hard"
+    }
+  ]
+}

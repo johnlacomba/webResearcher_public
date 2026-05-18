@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head><title>Cryptographic Hash Functions - Encyclopedia</title></head>
+<body>
+<h1>Cryptographic Hash Functions</h1>
+<p>A cryptographic hash function is a mathematical algorithm that maps data of arbitrary size to a fixed-size bit array. The output, commonly called a hash value or digest, serves as a compact representation of the input data. Unlike general-purpose hash functions, cryptographic hash functions must satisfy additional security properties that make them suitable for authentication, integrity verification, and digital signatures.</p>
+
+<h2>Security Properties</h2>
+<p>Three fundamental security properties define a cryptographic hash function. <strong>Preimage resistance</strong> (one-wayness) means that given a hash value h, it should be computationally infeasible to find any message m such that hash(m) = h. The expected work required is 2^n operations for an n-bit hash. <strong>Second preimage resistance</strong> means that given a message m1, it should be infeasible to find a different message m2 such that hash(m1) = hash(m2). <strong>Collision resistance</strong> means it should be infeasible to find any two distinct messages m1 and m2 such that hash(m1) = hash(m2). Due to the birthday paradox, collision resistance requires approximately 2^(n/2) operations, which is why hash outputs must be at least twice the desired security level in bits.</p>
+
+<h2>SHA-2 Family</h2>
+<p>The SHA-2 family, designed by the National Security Agency (NSA) and published by NIST in 2001, includes six hash functions: SHA-224, SHA-256, SHA-384, SHA-512, SHA-512/224, and SHA-512/256. SHA-256 produces a 256-bit (32-byte) digest and operates on 512-bit message blocks through 64 rounds of compression. Each round applies a combination of bitwise operations: Ch (choice), Maj (majority), and two sigma functions involving right rotations and right shifts.</p>
+
+<h3>SHA-256 Performance</h3>
+<p>On modern x86-64 processors with SHA-NI hardware extensions (available since Intel Goldmont and AMD Zen), SHA-256 achieves throughput of approximately 2.5 GB/s on a single core. Without hardware acceleration, optimized software implementations achieve 500-800 MB/s. ARM processors with the Cryptography Extensions (ARMv8-A CE) achieve approximately 1.8 GB/s. These throughput figures make SHA-256 suitable for bulk data integrity verification but relatively slow for password hashing, where deliberate slowness is desired.</p>
+
+<h3>SHA-256 Internal Structure</h3>
+<p>The SHA-256 compression function processes each 512-bit block using eight 32-bit working variables (a through h) initialized from the current hash state. The message schedule expands each 512-bit block into sixty-four 32-bit words using a recursive formula: W_t = sigma1(W_{t-2}) + W_{t-7} + sigma0(W_{t-15}) + W_{t-16} for t from 16 to 63. The round function updates the working variables using the formulas: T1 = h + Sigma1(e) + Ch(e,f,g) + K_t + W_t and T2 = Sigma0(a) + Maj(a,b,c), where K_t are sixty-four constant values derived from the fractional parts of the cube roots of the first sixty-four prime numbers.</p>
+
+<table>
+<caption>SHA-2 Family Comparison</caption>
+<thead>
+<tr><th>Algorithm</th><th>Output (bits)</th><th>Block Size (bits)</th><th>Rounds</th><th>Word Size (bits)</th></tr>
+</thead>
+<tbody>
+<tr><td>SHA-224</td><td>224</td><td>512</td><td>64</td><td>32</td></tr>
+<tr><td>SHA-256</td><td>256</td><td>512</td><td>64</td><td>32</td></tr>
+<tr><td>SHA-384</td><td>384</td><td>1024</td><td>80</td><td>64</td></tr>
+<tr><td>SHA-512</td><td>512</td><td>1024</td><td>80</td><td>64</td></tr>
+<tr><td>SHA-512/224</td><td>224</td><td>1024</td><td>80</td><td>64</td></tr>
+<tr><td>SHA-512/256</td><td>256</td><td>1024</td><td>80</td><td>64</td></tr>
+</tbody>
+</table>
+
+<h2>SHA-3 (Keccak)</h2>
+<p>SHA-3, standardized by NIST in 2015, is based on the Keccak sponge construction designed by Guido Bertoni, Joan Daemen, Michaël Peeters, and Gilles Van Assche. Unlike SHA-2's Merkle-Damgård construction, the sponge construction alternates between absorbing input blocks and squeezing output blocks through a permutation function. The Keccak-f[1600] permutation operates on a 5×5×64 state array (1600 bits total) through 24 rounds of five step mappings: theta, rho, pi, chi, and iota.</p>
+
+<h3>Sponge Construction</h3>
+<p>The sponge construction divides the 1600-bit state into a rate portion (r bits) and a capacity portion (c = 1600 - r bits). For SHA3-256, r = 1088 bits and c = 512 bits. During the absorbing phase, each r-bit input block is XORed into the rate portion, followed by application of the Keccak-f permutation. During the squeezing phase, r bits of output are extracted, with additional permutation applications if more output is needed. The security level is determined by c/2: for SHA3-256, the 512-bit capacity provides 256-bit security against all generic attacks.</p>
+
+<h3>SHAKE Extendable-Output Functions</h3>
+<p>SHAKE128 and SHAKE256 are extendable-output functions (XOFs) derived from Keccak. Unlike fixed-output hash functions, XOFs can produce output of any desired length by continuing the squeezing phase. SHAKE128 uses r = 1344, c = 256 (128-bit security) and SHAKE256 uses r = 1088, c = 512 (256-bit security). XOFs are used in post-quantum cryptographic schemes like CRYSTALS-Kyber and CRYSTALS-Dilithium, where variable-length outputs are needed for key generation and signature schemes.</p>
+
+<h2>BLAKE2 and BLAKE3</h2>
+<p>BLAKE2, published in 2012 by Jean-Philippe Aumasson and colleagues, was designed as a faster alternative to SHA-3 while maintaining equivalent security margins. BLAKE2b (optimized for 64-bit platforms) produces digests up to 512 bits and processes data at approximately 3.5 GB/s on modern hardware — roughly 3x faster than SHA-256 without hardware acceleration. BLAKE2s (optimized for 32-bit and smaller platforms) produces digests up to 256 bits.</p>
+
+<p>BLAKE3, released in 2020, extends BLAKE2 with a Merkle tree structure that enables unlimited parallelism. On a 16-core processor, BLAKE3 achieves throughput exceeding 30 GB/s by hashing independent subtrees in parallel and combining them. The algorithm uses a fixed compression function with 7 rounds (compared to BLAKE2b's 12 rounds), with security arguments relying on the wide-pipe construction rather than round count alone. BLAKE3 is used in the Bao verified streaming format and is the default hash in several modern build systems.</p>
+
+<h2>Practical Applications</h2>
+
+<h3>Git Object Storage</h3>
+<p>Git originally used SHA-1 for content-addressable storage, computing the hash of each blob, tree, and commit object to create an immutable object graph. Following the SHAttered collision attack in 2017, Git began transitioning to SHA-256 with the object-format=sha256 option. The migration preserves Git's content-addressable model while providing collision resistance against well-funded adversaries. As of 2024, the SHA-256 object format is considered experimental and is not yet the default.</p>
+
+<h3>Password Hashing</h3>
+<p>Cryptographic hash functions should never be used directly for password hashing because their speed enables brute-force attacks. A modern GPU can compute approximately 8 billion SHA-256 hashes per second. Purpose-built password hashing functions like Argon2 (winner of the 2015 Password Hashing Competition), bcrypt, and scrypt intentionally consume significant time and memory. Argon2id with recommended parameters (19 MiB memory, 2 iterations, 1 degree of parallelism) takes approximately 100 milliseconds per hash, making brute-force attacks six orders of magnitude slower than raw SHA-256.</p>
+
+<h3>Blockchain and Proof of Work</h3>
+<p>Bitcoin's proof-of-work consensus mechanism requires miners to find a nonce such that the double SHA-256 hash of the block header is below a target value. The current network hashrate exceeds 600 exahashes per second (6 × 10^20 SHA-256d computations per second). This enormous computational expenditure — equivalent to approximately 150 terawatt-hours per year — provides security by making block reversal economically prohibitive. Ethereum transitioned from proof-of-work to proof-of-stake in September 2022 (the Merge), eliminating its dependency on hash-based mining.</p>
+
+<pre><code>
+# Python example: computing SHA-256 and BLAKE2b digests
+import hashlib
+
+message = b"The quick brown fox jumps over the lazy dog"
+
+# SHA-256
+sha256_digest = hashlib.sha256(message).hexdigest()
+# Result: d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592
+
+# BLAKE2b (256-bit output)
+blake2b_digest = hashlib.blake2b(message, digest_size=32).hexdigest()
+# Result: 01718cec35cd3d796dd00020e0bfecb473ad23457d063b75eff29c0ffa2e58a9
+
+# SHAKE256 (variable output length)
+shake256 = hashlib.shake_256(message)
+shake_32 = shake256.hexdigest(32)  # 32-byte output
+shake_64 = shake256.hexdigest(64)  # 64-byte output
+</code></pre>
+
+<h2>Quantum Computing Implications</h2>
+<p>Grover's algorithm provides a quadratic speedup for searching unstructured databases, effectively halving the security bits of a hash function against preimage attacks. A 256-bit hash function would offer only 128-bit security against a quantum adversary with sufficient qubits. For collision resistance, the BHT (Brassard-Høyer-Tapp) algorithm achieves a cube-root speedup, reducing collision resistance from 2^(n/2) to 2^(n/3) operations. Current estimates suggest that breaking SHA-256 preimage resistance would require a quantum computer with approximately 2,330 logical qubits and over 10^23 T-gates — far beyond current capabilities but a consideration for data with multi-decade secrecy requirements. NIST recommends SHA-256 as quantum-resistant for the foreseeable future due to these high resource requirements.</p>
+
+</body>
+</html>

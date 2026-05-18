@@ -1,0 +1,161 @@
+Building Reliable Data Pipelines with Python Asyncio
+
+Modern data engineering requires processing millions of records per hour while maintaining reliability guarantees. Python's asyncio library provides cooperative multitasking that can dramatically improve I/O-bound pipeline throughput without the complexity of thread-based concurrency. This article explores patterns for building production-grade async data pipelines.
+
+The foundation of an async pipeline is the event loop. Unlike threads, which are preemptively scheduled by the OS, async tasks voluntarily yield control at await points. This eliminates race conditions from shared mutable state, but introduces a different class of bugs: starvation. A single task that performs CPU-heavy work without yielding can block the entire event loop, freezing all other tasks.
+
+```python
+import asyncio
+from dataclasses import dataclass
+
+@dataclass
+class PipelineConfig:
+    max_concurrent: int = 50
+    batch_size: int = 100
+    retry_limit: int = 3
+    timeout_seconds: float = 30.0
+
+async def bounded_gather(tasks, semaphore):
+    async def limited(task):
+        async with semaphore:
+            return await task
+    return await asyncio.gather(*(limited(t) for t in tasks))
+```
+
+The bounded_gather function above demonstrates a critical pattern: limiting concurrency with a semaphore. Without this bound, launching 10,000 HTTP requests simultaneously would exhaust file descriptors, trigger rate limits, and likely crash the process. The semaphore ensures at most max_concurrent tasks run at any time, providing backpressure to upstream producers.
+
+Error handling in async pipelines requires careful attention to exception propagation. When using asyncio.gather with return_exceptions=False (the default), the first exception cancels all pending tasks. This is usually wrong for data pipelines — you want to process as many records as possible and collect failures separately.
+
+```python
+async def resilient_batch_process(items, processor, config):
+    """Process items with retry logic and failure isolation."""
+    results = []
+    failures = []
+
+    for batch in chunk_iter(items, config.batch_size):
+        tasks = [process_with_retry(item, processor, config) for item in batch]
+        outcomes = await asyncio.gather(*tasks, return_exceptions=True)
+
+        for item, outcome in zip(batch, outcomes):
+            if isinstance(outcome, Exception):
+                failures.append({"item": item, "error": str(outcome)})
+            else:
+                results.append(outcome)
+
+    return results, failures
+
+
+async def process_with_retry(item, processor, config):
+    last_error = None
+    for attempt in range(config.retry_limit):
+        try:
+            return await asyncio.wait_for(
+                processor(item),
+                timeout=config.timeout_seconds,
+            )
+        except asyncio.TimeoutError:
+            last_error = TimeoutError(f"Timed out after {config.timeout_seconds}s")
+        except Exception as e:
+            last_error = e
+        if attempt < config.retry_limit - 1:
+            await asyncio.sleep(2 ** attempt)  # exponential backoff
+    raise last_error
+```
+
+The retry logic above uses exponential backoff starting at 1 second, doubling with each attempt. For a retry_limit of 3, the delays are 1, 2, and 4 seconds. The total maximum wait for a single item is the timeout_seconds multiplied by retry_limit plus the sum of backoff delays: for the default configuration, this is 30 * 3 + 7 = 97 seconds per item worst case.
+
+Connection pooling is essential for HTTP-based pipelines. The aiohttp library maintains a connection pool via its ClientSession, but the default pool size of 100 connections per host is often too aggressive for API endpoints with rate limits.
+
+```python
+import aiohttp
+
+async def create_http_session(config):
+    connector = aiohttp.TCPConnector(
+        limit=config.max_concurrent,
+        limit_per_host=10,
+        ttl_dns_cache=300,
+        enable_cleanup_closed=True,
+    )
+    timeout = aiohttp.ClientTimeout(total=config.timeout_seconds)
+    return aiohttp.ClientSession(connector=connector, timeout=timeout)
+```
+
+Setting limit_per_host to 10 ensures no single downstream service receives more than 10 concurrent connections, even when the global concurrency limit is much higher. The ttl_dns_cache of 300 seconds avoids DNS lookups on every request while still respecting TTL-based DNS load balancing.
+
+Monitoring async pipelines requires instrumenting both throughput and latency distributions. A simple approach uses a shared counter with periodic reporting:
+
+```python
+import time
+
+class PipelineMetrics:
+    def __init__(self):
+        self.processed = 0
+        self.failed = 0
+        self.total_latency = 0.0
+        self._start = time.monotonic()
+
+    @property
+    def elapsed(self):
+        return time.monotonic() - self._start
+
+    @property
+    def throughput(self):
+        return self.processed / max(self.elapsed, 0.001)
+
+    def record(self, latency, success=True):
+        if success:
+            self.processed += 1
+        else:
+            self.failed += 1
+        self.total_latency += latency
+
+    def summary(self):
+        total = self.processed + self.failed
+        avg_latency = self.total_latency / max(total, 1)
+        return (
+            f"Processed: {self.processed}, Failed: {self.failed}, "
+            f"Throughput: {self.throughput:.1f}/s, "
+            f"Avg Latency: {avg_latency:.3f}s"
+        )
+```
+
+Backpressure is the most commonly overlooked concern in async pipelines. When a producer generates items faster than consumers can process them, memory grows without bound. The asyncio.Queue with a maxsize provides natural backpressure — when the queue is full, producers block until consumers drain it.
+
+```python
+async def producer_consumer_pipeline(source, processor, config):
+    queue = asyncio.Queue(maxsize=config.batch_size * 2)
+    metrics = PipelineMetrics()
+
+    async def producer():
+        async for item in source:
+            await queue.put(item)
+        for _ in range(config.max_concurrent):
+            await queue.put(None)  # poison pills
+
+    async def consumer():
+        while True:
+            item = await queue.get()
+            if item is None:
+                break
+            start = time.monotonic()
+            try:
+                await processor(item)
+                metrics.record(time.monotonic() - start, success=True)
+            except Exception:
+                metrics.record(time.monotonic() - start, success=False)
+
+    producer_task = asyncio.create_task(producer())
+    consumer_tasks = [
+        asyncio.create_task(consumer())
+        for _ in range(config.max_concurrent)
+    ]
+    await producer_task
+    await asyncio.gather(*consumer_tasks)
+    return metrics
+```
+
+The poison pill pattern above cleanly signals shutdown: the producer sends one None sentinel per consumer after exhausting the source. Each consumer exits its loop when it receives the sentinel. This avoids the common anti-pattern of using task cancellation for normal shutdown, which can interrupt in-flight processing.
+
+Testing async code requires pytest-asyncio or equivalent. Key patterns: mock external services with aioresponses, use asyncio.Event to control timing in tests, and always set tight timeouts to prevent hanging tests.
+
+In production deployments at scale, async pipelines on a single machine can sustain 5,000-15,000 HTTP requests per second depending on response payload sizes. For comparison, a thread-pool-based approach with 200 threads typically plateaus around 1,000-2,000 requests per second due to context switching overhead and GIL contention on response parsing. The async approach also uses roughly 60% less memory: each coroutine frame is approximately 2KB versus 8MB default stack per thread.

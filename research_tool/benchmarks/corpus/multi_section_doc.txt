@@ -1,0 +1,75 @@
+Understanding Database Indexing Strategies
+
+Database indexing is the single most impactful optimization technique for query performance. An index creates a secondary data structure that maps column values to row locations, trading write performance and storage space for dramatically faster reads. Without appropriate indexes, a database must perform a full table scan — reading every row — for each query, which scales linearly with table size.
+
+B-Tree Indexes: The Default Workhorse
+
+B-tree indexes are the default index type in PostgreSQL, MySQL, SQLite, and most relational databases. A B-tree maintains sorted data in a balanced tree structure where each node contains multiple keys and child pointers. The branching factor (number of children per node) is determined by the page size: with 8KB pages and 8-byte keys, each internal node holds approximately 500 entries, meaning a three-level B-tree can index 125 million rows. Lookups require O(log_b N) page reads, where b is the branching factor.
+
+The key advantage of B-trees over binary search trees is their cache-friendly access pattern. Because each node occupies one or more disk pages, a B-tree lookup touches far fewer pages than a binary search tree with the same number of entries. A B-tree with 10 million rows typically requires only 3-4 page reads for a point lookup, compared to approximately 23 page reads for a balanced binary tree.
+
+Composite Indexes and Column Ordering
+
+A composite index covers multiple columns and supports queries that filter on any left prefix of the indexed columns. For a composite index on (country, city, zip_code), queries filtering on country alone, country + city, or all three columns can use the index efficiently. However, a query filtering only on city or zip_code cannot use this index, because the B-tree is sorted by country first. This is known as the leftmost prefix rule and is the most common source of inefficient index usage.
+
+Column ordering in a composite index should follow the Equality-Sort-Range (ESR) rule: columns used in equality comparisons first, then columns used for sorting, then columns used in range comparisons. For the query SELECT * FROM orders WHERE status = 'shipped' ORDER BY created_at WHERE total > 100, the optimal composite index is (status, created_at, total) — not (total, status, created_at) or (created_at, status, total).
+
+Covering Indexes and Index-Only Scans
+
+A covering index includes all columns required by a query, enabling the database to satisfy the query entirely from the index without accessing the table (heap). This eliminates the random I/O cost of looking up each matching row in the table, which can reduce query latency by 10-100x for queries that match many rows but return few columns. PostgreSQL calls this an "index-only scan" and requires the visibility map to confirm that all tuples on a page are visible to all transactions.
+
+To create a covering index in PostgreSQL, use the INCLUDE clause: CREATE INDEX idx_orders_status ON orders (status) INCLUDE (total, created_at). The INCLUDE columns are stored in the index leaf nodes but not in the B-tree's internal navigation structure, so they don't affect index ordering or search performance.
+
+Hash Indexes: O(1) Point Lookups
+
+Hash indexes provide constant-time O(1) lookups for exact equality comparisons. They compute a hash of the indexed value and store it in a hash table with overflow chains. Prior to PostgreSQL 10, hash indexes were not crash-safe (not WAL-logged) and were rarely used. Since PostgreSQL 10, they are fully crash-safe and can be 10-30% faster than B-tree indexes for pure equality lookups on large tables with high-cardinality columns.
+
+Hash indexes do not support range queries, ordering, or partial matching. They are useful only for exact equality (=) and IS NOT DISTINCT FROM comparisons. For most workloads, the versatility of B-tree indexes outweighs the marginal speed advantage of hash indexes.
+
+GiST and GIN Indexes: Beyond Scalar Values
+
+GiST (Generalized Search Tree) indexes support complex data types like geometric shapes, full-text search vectors, and range types. The PostGIS extension uses GiST indexes for spatial queries, enabling efficient bounding-box intersection and nearest-neighbor searches. A GiST index on a geometry column allows queries like "find all restaurants within 500 meters of this point" to complete in under 5 milliseconds even with millions of rows.
+
+GIN (Generalized Inverted Index) indexes are optimized for values that contain multiple elements, such as arrays, JSONB documents, and full-text search vectors. A GIN index on a JSONB column enables efficient containment queries (@>) and existence checks (?). For full-text search, GIN indexes are typically 2-3x faster than GiST indexes for lookups but 3x slower to build and 2-3x larger on disk.
+
+BRIN Indexes: Minimal Storage for Ordered Data
+
+Block Range Indexes (BRIN) store summary information about ranges of physical table blocks rather than indexing individual rows. For a timestamp column in a table where rows are inserted in chronological order, a BRIN index stores the minimum and maximum timestamp for each block range (default 128 pages). This enables the database to skip entire block ranges that cannot contain matching rows.
+
+BRIN indexes are extremely compact: a BRIN index on a 100GB table typically occupies only a few hundred kilobytes. They are most effective when the physical ordering of rows correlates strongly with the indexed column values. For randomly ordered data, BRIN indexes provide little benefit because every block range spans the full value range.
+
+Partial Indexes: Indexing a Subset of Rows
+
+Partial indexes include a WHERE clause that limits which rows are indexed. For a table where 95% of orders have status='completed' and queries primarily target the 5% of active orders, a partial index CREATE INDEX idx_active_orders ON orders (created_at) WHERE status != 'completed' indexes only the active rows. This reduces index size by 95% and improves both write performance (fewer index entries to maintain) and read performance (smaller index to search).
+
+Partial indexes are particularly valuable for soft-delete patterns, where a deleted_at column marks rows as logically deleted. An index WHERE deleted_at IS NULL covers only active rows, avoiding the overhead of indexing tombstoned records.
+
+Expression Indexes: Indexing Computed Values
+
+Expression indexes (also called functional indexes) index the result of a function or expression rather than a raw column value. For case-insensitive email lookups, CREATE INDEX idx_users_email ON users (lower(email)) creates an index on the lowercased email. The query planner uses this index when the query's WHERE clause matches the indexed expression exactly: WHERE lower(email) = 'user@example.com'.
+
+Common use cases include indexing JSON field extractions (CREATE INDEX idx_data_type ON events ((data->>'type'))), date truncation for time-series grouping (CREATE INDEX idx_events_day ON events (date_trunc('day', created_at))), and computed distance or similarity functions.
+
+Write Amplification and Index Maintenance
+
+Every index on a table adds overhead to INSERT, UPDATE, and DELETE operations. Each write must update not only the table's heap storage but also every index that covers the modified columns. With 10 indexes on a table, a single-row INSERT performs 11 writes (1 heap + 10 indexes). This write amplification is the primary reason to be selective about index creation.
+
+PostgreSQL's HOT (Heap-Only Tuple) optimization mitigates update overhead when the updated columns are not part of any index. HOT updates modify the tuple in-place within the same page without updating any index entries. This optimization is critical for frequently-updated columns: adding an index on a column that receives frequent updates can reduce throughput by 40-60%.
+
+Index Bloat and Maintenance
+
+B-tree indexes in PostgreSQL can accumulate dead tuples (space from deleted or updated rows) that are not immediately reclaimed. This index bloat increases index size and scan time. The VACUUM process marks dead tuples as reusable, but does not reclaim trailing empty pages. REINDEX rebuilds the index from scratch, eliminating all bloat but acquiring an exclusive lock. The pg_repack extension provides online reindexing without exclusive locks.
+
+A healthy B-tree index typically has a fillfactor between 70% and 90%. Indexes with fillfactor below 50% are considered bloated and benefit from rebuilding. The pgstattuple extension provides the bt_index_check function to measure actual index bloat. As a rule of thumb, indexes should be monitored for bloat when table churn (updates + deletes per day) exceeds 10% of the table size.
+
+Query Planner and Index Selection
+
+The query planner estimates the cost of different execution strategies and chooses the cheapest plan. For index scans, the planner considers: the index's selectivity (what fraction of rows match the query), the correlation between physical row order and index order, and the number of index conditions that can be pushed down. The planner may reject an index when it estimates that a sequential scan would be faster — typically when the query matches more than 10-20% of the table.
+
+The EXPLAIN ANALYZE command reveals which indexes were chosen and why. The key metrics are: actual rows (compared to planned rows, indicating estimation accuracy), heap fetches (for index-only scans, lower is better), and loops (for nested loop joins, each loop iteration performs a separate index lookup).
+
+Multi-Column Statistics and Extended Statistics
+
+PostgreSQL's default statistics assume column independence: the selectivity of AND conditions is estimated as the product of individual selectivities. This assumption fails badly for correlated columns. For example, if 50% of rows have country='US' and 10% have language='English', the planner estimates 5% for both conditions — but the actual selectivity might be 48% because almost all US rows use English.
+
+Extended statistics (CREATE STATISTICS) allow PostgreSQL to track multi-column correlations, n-distinct counts for column combinations, and MCV (most common values) lists for column groups. These dramatically improve cardinality estimates for correlated columns, leading to better join ordering and index selection. Without extended statistics, the planner may choose nested-loop joins where hash joins would be orders of magnitude faster.
