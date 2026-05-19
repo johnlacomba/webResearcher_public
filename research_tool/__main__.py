@@ -18,7 +18,7 @@ import os
 import signal
 import sys
 
-DEFAULT_DB = "research.db"
+DEFAULT_DB = os.environ.get("RESEARCH_DB", "research.db")
 
 
 def _make_llm(args: argparse.Namespace):
