@@ -7,6 +7,7 @@ import html as html_lib
 import json
 import logging
 import re
+import shutil
 import tempfile
 import time
 from dataclasses import dataclass, field
@@ -410,6 +411,58 @@ class ProgressCallback:
         pass
 
 
+_INGESTION_KEY_ATTRS = ("CHUNK_MODE", "PARENT_CHILD_ENABLED",
+                        "JINA_CODE_EMBEDDING_ENABLED", "TOKEN_EMBEDDING_ENABLED")
+
+
+def _ingestion_cache_key(config: BenchmarkConfig) -> str:
+    parts = {attr: config.module_overrides.get(attr) for attr in _INGESTION_KEY_ATTRS}
+    return json.dumps(parts, sort_keys=True)
+
+
+def _install_embedding_cache() -> dict:
+    import research_tool.store as store_mod
+
+    cache: dict[tuple, Any] = {}
+    orig_make_embedding = store_mod._make_embedding
+    orig_make_code_embedding = store_mod._make_code_embedding
+    orig_make_token_embeddings = store_mod._make_token_embeddings
+
+    def cached_make_embedding(text, mode="document"):
+        key = ("emb", text, mode)
+        if key not in cache:
+            cache[key] = orig_make_embedding(text, mode)
+        return cache[key]
+
+    def cached_make_code_embedding(text):
+        key = ("code", text)
+        if key not in cache:
+            cache[key] = orig_make_code_embedding(text)
+        return cache[key]
+
+    def cached_make_token_embeddings(text):
+        key = ("tok", text)
+        if key not in cache:
+            cache[key] = orig_make_token_embeddings(text)
+        return cache[key]
+
+    store_mod._make_embedding = cached_make_embedding
+    store_mod._make_code_embedding = cached_make_code_embedding
+    store_mod._make_token_embeddings = cached_make_token_embeddings
+
+    return {
+        "_make_embedding": orig_make_embedding,
+        "_make_code_embedding": orig_make_code_embedding,
+        "_make_token_embeddings": orig_make_token_embeddings,
+    }
+
+
+def _uninstall_embedding_cache(originals: dict) -> None:
+    import research_tool.store as store_mod
+    for name, func in originals.items():
+        setattr(store_mod, name, func)
+
+
 class BenchmarkRunner:
     def __init__(
         self,
@@ -426,13 +479,24 @@ class BenchmarkRunner:
         results: list[ConfigResult] = []
         originals = _save_originals()
 
-        total = len(self.configs)
-        for i, config in enumerate(self.configs):
-            self.progress.on_config_start(i, total, config.name)
-            result = self._run_single(config, docs, queries, originals)
-            results.append(result)
+        cache_dir = tempfile.mkdtemp(prefix="bench_cache_")
+        ingestion_cache: dict[str, tuple[str, int]] = {}
+        embed_originals = _install_embedding_cache()
 
-            self.progress.on_config_done(i, total, result)
+        try:
+            total = len(self.configs)
+            for i, config in enumerate(self.configs):
+                self.progress.on_config_start(i, total, config.name)
+                result = self._run_single(
+                    config, docs, queries, originals,
+                    cache_dir, ingestion_cache,
+                )
+                results.append(result)
+
+                self.progress.on_config_done(i, total, result)
+        finally:
+            _uninstall_embedding_cache(embed_originals)
+            shutil.rmtree(cache_dir, ignore_errors=True)
 
         return results
 
@@ -442,6 +506,8 @@ class BenchmarkRunner:
         docs: list[CorpusDocument],
         queries: list[GroundTruthQuery],
         originals: dict[str, Any],
+        cache_dir: str = "",
+        ingestion_cache: dict[str, tuple[str, int]] | None = None,
     ) -> ConfigResult:
         from research_tool.eval import EvalQuery, evaluate
         from research_tool.store import HybridIndex, ResearchStore
@@ -456,15 +522,32 @@ class BenchmarkRunner:
 
             with tempfile.TemporaryDirectory() as tmpdir:
                 db_path = str(Path(tmpdir) / "bench.db")
-                store_inst = ResearchStore(db_path=db_path)
 
-                # Ingestion phase
-                t0 = time.perf_counter()
-                total_chunks = 0
-                for doc in docs:
-                    total_chunks += _ingest_document(doc, store_inst, config)
-                result.ingestion_time = time.perf_counter() - t0
-                result.chunk_count = total_chunks
+                ikey = _ingestion_cache_key(config) if ingestion_cache is not None else None
+                cached = ingestion_cache.get(ikey) if ikey else None
+
+                if cached:
+                    cached_db_path, total_chunks = cached
+                    t0 = time.perf_counter()
+                    shutil.copy2(cached_db_path, db_path)
+                    result.ingestion_time = time.perf_counter() - t0
+                    result.chunk_count = total_chunks
+                    store_inst = ResearchStore(db_path=db_path)
+                else:
+                    store_inst = ResearchStore(db_path=db_path)
+                    t0 = time.perf_counter()
+                    total_chunks = 0
+                    for doc in docs:
+                        total_chunks += _ingest_document(doc, store_inst, config)
+                    result.ingestion_time = time.perf_counter() - t0
+                    result.chunk_count = total_chunks
+
+                    if ikey is not None and ingestion_cache is not None:
+                        store_inst.close()
+                        cached_db = str(Path(cache_dir) / f"{hashlib.md5(ikey.encode()).hexdigest()}.db")
+                        shutil.copy2(db_path, cached_db)
+                        ingestion_cache[ikey] = (cached_db, total_chunks)
+                        store_inst = ResearchStore(db_path=db_path)
 
                 # Build index
                 index = HybridIndex(mode="query")
