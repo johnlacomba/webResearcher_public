@@ -65,6 +65,8 @@ logger = logging.getLogger(__name__)
 # ── Constants ────────────────────────────────────────────────────────────────
 
 DEFAULT_CLAUDE_MODEL = "claude-sonnet-4-6"
+DEFAULT_OPENAI_MODEL = "gpt-4o"
+DEFAULT_OPENAI_URL = "https://api.openai.com/v1"
 DEFAULT_OMLX_URL = "http://localhost:8000/v1"
 DEFAULT_OLLAMA_URL = "http://localhost:11434/v1"
 NOVELTY_THRESHOLD = 0.20  # stop if fewer than 20% of new chunks are novel
@@ -114,11 +116,13 @@ Return ONLY a JSON array of query strings, nothing else.\
 
 
 class LLMClient:
-    """LLM client supporting Claude, OMLX, and Ollama backends.
+    """LLM client supporting Claude, OpenAI, OMLX, and Ollama backends.
 
     Backend selection:
         - backend="claude" (default): uses the Anthropic SDK, requires
           ANTHROPIC_API_KEY env var or explicit api_key.
+        - backend="openai": uses the OpenAI API. Requires OPENAI_API_KEY
+          env var or explicit api_key. Model defaults to gpt-4o.
         - backend="omlx": uses the local OMLX server's OpenAI-compatible
           endpoint. Requires OMLX_API_KEY env var or explicit api_key.
           Server URL defaults to http://localhost:8000/v1.
@@ -136,8 +140,17 @@ class LLMClient:
     ):
         self._backend = backend
 
-        if backend in ("omlx", "ollama"):
-            if backend == "omlx":
+        if backend in ("openai", "omlx", "ollama"):
+            if backend == "openai":
+                self._base_url = base_url or os.environ.get("OPENAI_BASE_URL", DEFAULT_OPENAI_URL)
+                self._api_key = api_key or os.environ.get("OPENAI_API_KEY", "")
+                if not self._api_key:
+                    raise ValueError(
+                        "No OpenAI API key provided. Set OPENAI_API_KEY environment "
+                        "variable or pass api_key to LLMClient."
+                    )
+                self._model = model or DEFAULT_OPENAI_MODEL
+            elif backend == "omlx":
                 self._base_url = base_url or os.environ.get("OMLX_BASE_URL", DEFAULT_OMLX_URL)
                 self._api_key = api_key or os.environ.get("OMLX_API_KEY", "")
                 if not self._api_key:
@@ -145,10 +158,11 @@ class LLMClient:
                         "No OMLX API key provided. Set OMLX_API_KEY environment "
                         "variable or pass api_key to LLMClient."
                     )
+                self._model = model
             else:
                 self._base_url = base_url or os.environ.get("OLLAMA_BASE_URL", DEFAULT_OLLAMA_URL)
                 self._api_key = api_key or os.environ.get("OLLAMA_API_KEY", "ollama")
-            self._model = model  # resolved at call time via /models if None
+                self._model = model
         else:
             import anthropic
 
@@ -163,7 +177,7 @@ class LLMClient:
 
     def generate(self, system_prompt: str, user_prompt: str) -> str:
         """Send a prompt and return the text response."""
-        if self._backend in ("omlx", "ollama"):
+        if self._backend in ("openai", "omlx", "ollama"):
             return self._generate_openai_compat(system_prompt, user_prompt)
         return self._generate_claude(system_prompt, user_prompt)
 
@@ -171,11 +185,11 @@ class LLMClient:
         """Send multimodal content (text + images) and return text response.
 
         Claude backend: passes content_blocks directly as the message content.
-        Ollama backend: passes content_blocks as OpenAI-style messages (vision models supported).
+        OpenAI/Ollama backend: passes content_blocks as OpenAI-style messages (vision models supported).
         OMLX backend: strips image blocks and falls back to text-only.
         """
-        if self._backend == "ollama":
-            return self._generate_ollama_multimodal(system_prompt, content_blocks)
+        if self._backend in ("openai", "ollama"):
+            return self._generate_openai_multimodal(system_prompt, content_blocks)
         if self._backend == "omlx":
             logger.warning("Multimodal passthrough not supported on OMLX backend — using text only")
             text_parts = [b["text"] for b in content_blocks if b.get("type") == "text"]
@@ -269,8 +283,8 @@ class LLMClient:
             logger.exception("%s API call failed", label)
             raise
 
-    def _generate_ollama_multimodal(self, system_prompt: str, content_blocks: list[dict]) -> str:
-        """Send multimodal content via Ollama's OpenAI-compatible vision API."""
+    def _generate_openai_multimodal(self, system_prompt: str, content_blocks: list[dict]) -> str:
+        """Send multimodal content via OpenAI-compatible vision API (OpenAI, Ollama)."""
         model = self._model or self._fetch_first_model()
         openai_content = []
         for block in content_blocks:
@@ -307,7 +321,7 @@ class LLMClient:
                 data = json.loads(resp.read())
             return data["choices"][0]["message"]["content"]
         except Exception:
-            logger.warning("Ollama multimodal call failed, falling back to text-only")
+            logger.warning("%s multimodal call failed, falling back to text-only", self._backend.upper())
             text_parts = [b["text"] for b in content_blocks if b.get("type") == "text"]
             return self._generate_openai_compat(system_prompt, "\n\n".join(text_parts))
 
@@ -1238,7 +1252,7 @@ class QueryEngine:
             question=question, context=context_text,
         )
 
-        if chart_images and llm._backend == "claude":
+        if chart_images and llm._backend in ("claude", "openai"):
             content_blocks: list[dict] = [{"type": "text", "text": user_prompt}]
             for img in chart_images:
                 if img["image_bytes"]:

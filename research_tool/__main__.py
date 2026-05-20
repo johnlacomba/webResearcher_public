@@ -39,12 +39,12 @@ def _ensure_db_dir(db_path: str) -> None:
 def _add_llm_args(parser: argparse.ArgumentParser) -> None:
     """Add --llm and --model flags to a subparser."""
     parser.add_argument(
-        "--llm", choices=["claude", "omlx", "ollama"], default="claude",
-        help="LLM backend: 'claude' (Anthropic API), 'omlx' (local server), or 'ollama'. Default: claude",
+        "--llm", choices=["claude", "openai", "omlx", "ollama"], default="claude",
+        help="LLM backend: 'claude' (Anthropic API), 'openai' (OpenAI API), 'omlx' (local OMLX server), or 'ollama' (local Ollama server). Default: claude",
     )
     parser.add_argument(
         "--model", default=None,
-        help="Model name override. For omlx|ollama, auto-detected from server if omitted.",
+        help="Model name override. For openai defaults to gpt-4o. For omlx/ollama, auto-detected from server if omitted.",
     )
 
 
